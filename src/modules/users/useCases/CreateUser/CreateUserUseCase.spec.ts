@@ -4,6 +4,7 @@ import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/prot
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
+import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
 
 import { CreateUserUseCase } from './CreateUserUseCase';
 
@@ -11,17 +12,8 @@ interface ISutTypes {
   sut: CreateUserUseCase;
   usersRepositoryStub: IUsersRepository;
   cpfValidatorStub: ICpfValidatorProvider;
+  passwordHashProviderStub: IPasswordHashProvider;
 }
-
-const makeCpfValidator = (): ICpfValidatorProvider => {
-  class CpfValidatorStub implements ICpfValidatorProvider {
-    isValid(cpf: string): boolean {
-      return true;
-    }
-  }
-
-  return new CpfValidatorStub();
-};
 
 const makeUsersRepository = (): IUsersRepository => {
   class UsersRepositoryStub implements IUsersRepository {
@@ -52,16 +44,47 @@ const makeUsersRepository = (): IUsersRepository => {
   return new UsersRepositoryStub();
 };
 
+const makeCpfValidator = (): ICpfValidatorProvider => {
+  class CpfValidatorStub implements ICpfValidatorProvider {
+    isValid(cpf: string): boolean {
+      return true;
+    }
+  }
+
+  return new CpfValidatorStub();
+};
+
+const makePasswordHash = (): IPasswordHashProvider => {
+  class PasswordHashProviderStub implements IPasswordHashProvider {
+    generateHash(payload: string): Promise<string> {
+      const hash = 'hashed_password';
+
+      return new Promise(resolve => resolve(hash));
+    }
+    compareHash(payload: string, hashed: string): Promise<boolean> {
+      return new Promise(resolve => resolve(true));
+    }
+  }
+
+  return new PasswordHashProviderStub();
+};
+
 const makeSut = (): ISutTypes => {
   const usersRepositoryStub = makeUsersRepository();
   const cpfValidatorStub = makeCpfValidator();
+  const passwordHashProviderStub = makePasswordHash();
 
-  const sut = new CreateUserUseCase(usersRepositoryStub, cpfValidatorStub);
+  const sut = new CreateUserUseCase(
+    usersRepositoryStub,
+    cpfValidatorStub,
+    passwordHashProviderStub,
+  );
 
   return {
     usersRepositoryStub,
     sut,
     cpfValidatorStub,
+    passwordHashProviderStub,
   };
 };
 
@@ -140,5 +163,28 @@ describe('Users', () => {
     await expect(userWithInvalidCpf).rejects.toEqual(
       new AppError('Invalid CPF'),
     );
+  });
+
+  it('Should be able to hash the user password', async () => {
+    const { sut } = makeSut();
+
+    const fakeUser = {
+      id: 'valid_id',
+      name: 'valid_name',
+      email: 'any_mail@mail.com',
+      password: 'hashed_password',
+      cpf: '123456',
+      cep: 123456,
+      street: 'valid_street',
+      homeNumber: 100,
+      district: 'valid_district',
+      city: 'valid_city',
+      state: 'valid_state',
+      country: 'valid_country',
+    };
+
+    const hashedPasswordUser = await sut.execute(fakeUser);
+
+    expect(hashedPasswordUser.password).toEqual('hashed_password');
   });
 });
