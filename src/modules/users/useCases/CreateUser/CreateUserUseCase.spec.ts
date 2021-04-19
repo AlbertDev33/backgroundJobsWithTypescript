@@ -87,4 +87,31 @@ describe('Users', () => {
 
     expect(user).toHaveProperty('id');
   });
+
+  it('Should not be able to create a user with used email', async () => {
+    const { sut, usersRepositoryStub } = makeSut();
+
+    const fakeUser = {
+      id: 'valid_id',
+      name: 'valid_name',
+      email: 'any_mail@mail.com',
+      password: 'hashed_password',
+      cpf: '123456',
+      cep: 123456,
+      street: 'valid_street',
+      homeNumber: 100,
+      district: 'valid_district',
+      city: 'valid_city',
+      state: 'valid_state',
+      country: 'valid_country',
+    };
+
+    jest
+      .spyOn(usersRepositoryStub, 'findByEmail')
+      .mockReturnValue(new Promise(resolve => resolve(fakeUser)));
+
+    const invalidUser = sut.execute(fakeUser);
+
+    await expect(invalidUser).rejects.toEqual(new AppError('Invalid email'));
+  });
 });
