@@ -9,11 +9,13 @@
   "dependencies": {
     "bcrypt": "^5.0.1",
     "cpf-cnpj-validator": "^1.0.3",
+    "jsonwebtoken": "^8.5.1",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^3.0.1",
     "@types/jest": "^26.0.22",
+    "@types/jsonwebtoken": "^8.5.1",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
