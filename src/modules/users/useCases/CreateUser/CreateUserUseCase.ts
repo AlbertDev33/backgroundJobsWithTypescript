@@ -7,7 +7,11 @@ import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/pr
 type IRequest = Omit<ICreateUserDTO, 'id'>;
 
 export class CreateUserUseCase {
-  constructor(private usersRepository: IUsersRepository) {}
+  constructor(
+    private usersRepository: IUsersRepository,
+
+    private cpfValidatorProvider: ICpfValidatorProvider,
+  ) {}
 
   async execute({
     name,
@@ -26,6 +30,12 @@ export class CreateUserUseCase {
 
     if (findUser) {
       throw new AppError('Invalid email');
+    }
+
+    const isValidCpf = this.cpfValidatorProvider.isValid(cpf);
+
+    if (!isValidCpf) {
+      throw new AppError('Invalid CPF');
     }
 
     const user = await this.usersRepository.create({
