@@ -84,7 +84,11 @@ const makeSut = (): ISutTypes => {
   const tokenManagerStub = makeTokenManager();
   const passwordHashProviderStub = makePasswordHashProvider();
 
-  const sut = new UserSessionUseCase(usersRepositoryStub, tokenManagerStub);
+  const sut = new UserSessionUseCase(
+    usersRepositoryStub,
+    tokenManagerStub,
+    passwordHashProviderStub,
+  );
 
   return {
     sut,
@@ -95,7 +99,7 @@ const makeSut = (): ISutTypes => {
 };
 
 describe('User Session', () => {
-  it('Should be abel to create a session for an registered user', async () => {
+  it('Should be able to create a session for an registered user', async () => {
     const { sut, usersRepositoryStub } = makeSut();
 
     const fakeUser = {
@@ -144,11 +148,45 @@ describe('User Session', () => {
     });
 
     await expect(unregisterUser).rejects.toEqual(
-      new AppError('User not found!'),
+      new AppError('Invalid e-mail or password!'),
     );
   });
 
   it('Should throw if invalid user password', async () => {
     const { sut, usersRepositoryStub, passwordHashProviderStub } = makeSut();
+
+    const fakeUser = {
+      id: 'valid_id',
+      name: 'valid_name',
+      email: 'any_mail@mail.com',
+      password: 'valid_password',
+      cpf: '123456',
+      cep: 123456,
+      street: 'valid_street',
+      homeNumber: 100,
+      district: 'valid_district',
+      city: 'valid_city',
+      state: 'valid_state',
+      country: 'valid_country',
+    };
+
+    const userLogin = {
+      email: 'any_mail@mail.com',
+      password: 'invalid_password',
+    };
+
+    jest
+      .spyOn(usersRepositoryStub, 'findByEmail')
+      .mockReturnValueOnce(new Promise(resolve => resolve(fakeUser)));
+
+    jest
+      .spyOn(passwordHashProviderStub, 'compareHash')
+      .mockReturnValueOnce(new Promise(resolve => resolve(false)));
+
+    const login = sut.execute(userLogin);
+
+    await expect(login).rejects.toEqual(
+      new AppError('Invalid e-mail or password!'),
+    );
   });
 });
