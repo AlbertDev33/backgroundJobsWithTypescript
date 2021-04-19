@@ -2,6 +2,7 @@ import auth from '@config/auth';
 import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/protocol/IUsersRepositories';
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
+import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
 import { ITokenManagerProvider } from '@shared/providers/TokenManager/protocol/ITokenManagerProvider';
 
 import { IUserSessionUseCase } from './model/IUserSessionUseCase';
@@ -21,6 +22,8 @@ export class UserSessionUseCase implements IUserSessionUseCase {
     private usersRepository: IUsersRepository,
 
     private tokenManagerProvider: ITokenManagerProvider,
+
+    private passwordHashProvider: IPasswordHashProvider,
   ) {}
 
   async execute({
@@ -30,10 +33,19 @@ export class UserSessionUseCase implements IUserSessionUseCase {
     const existsUser = await this.usersRepository.findByEmail(email);
 
     if (!existsUser) {
-      throw new AppError('User not found!');
+      throw new AppError('Invalid e-mail or password!');
     }
 
-    const token = await this.generateToken(existsUser.id);
+    const isValidPassword = await this.passwordHashProvider.compareHash(
+      password,
+      existsUser.password,
+    );
+
+    if (!isValidPassword) {
+      throw new AppError('Invalid e-mail or password!');
+    }
+
+    const token = this.generateToken(existsUser.id);
 
     return {
       token,
@@ -41,7 +53,7 @@ export class UserSessionUseCase implements IUserSessionUseCase {
     };
   }
 
-  private async generateToken(userId: string): Promise<string> {
+  private generateToken(userId: string): string {
     const { secret, expiresIn } = auth.jwt;
 
     const token = this.tokenManagerProvider.sign({
