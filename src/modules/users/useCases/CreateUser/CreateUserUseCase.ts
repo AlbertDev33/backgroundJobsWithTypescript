@@ -3,6 +3,7 @@ import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/prot
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
+import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
 
 type IRequest = Omit<ICreateUserDTO, 'id'>;
 
@@ -11,6 +12,8 @@ export class CreateUserUseCase {
     private usersRepository: IUsersRepository,
 
     private cpfValidatorProvider: ICpfValidatorProvider,
+
+    private passwordHashProvider: IPasswordHashProvider,
   ) {}
 
   async execute({
@@ -38,10 +41,14 @@ export class CreateUserUseCase {
       throw new AppError('Invalid CPF');
     }
 
+    const hashedPassword = await this.passwordHashProvider.generateHash(
+      password,
+    );
+
     const user = await this.usersRepository.create({
       name,
       email,
-      password,
+      password: hashedPassword,
       cpf,
       cep,
       street,
