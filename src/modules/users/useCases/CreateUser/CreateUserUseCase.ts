@@ -5,9 +5,11 @@ import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
 import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
 
-type IRequest = Omit<ICreateUserDTO, 'id'>;
+import { ICreateUserUseCase } from './model/ICreateUserUseCase';
 
-export class CreateUserUseCase {
+export type IRequest = Omit<ICreateUserDTO, 'id'>;
+
+export class CreateUserUseCase implements ICreateUserUseCase {
   constructor(
     private usersRepository: IUsersRepository,
 
