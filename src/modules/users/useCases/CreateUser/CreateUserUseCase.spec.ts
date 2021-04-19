@@ -114,4 +114,31 @@ describe('Users', () => {
 
     await expect(invalidUser).rejects.toEqual(new AppError('Invalid email'));
   });
+
+  it('Should not be able to create a user with invalid cpf', async () => {
+    const { sut, cpfValidatorStub } = makeSut();
+
+    const fakeUser = {
+      id: 'valid_id',
+      name: 'valid_name',
+      email: 'any_mail@mail.com',
+      password: 'hashed_password',
+      cpf: '123456',
+      cep: 123456,
+      street: 'valid_street',
+      homeNumber: 100,
+      district: 'valid_district',
+      city: 'valid_city',
+      state: 'valid_state',
+      country: 'valid_country',
+    };
+
+    jest.spyOn(cpfValidatorStub, 'isValid').mockReturnValueOnce(false);
+
+    const userWithInvalidCpf = sut.execute(fakeUser);
+
+    await expect(userWithInvalidCpf).rejects.toEqual(
+      new AppError('Invalid CPF'),
+    );
+  });
 });
