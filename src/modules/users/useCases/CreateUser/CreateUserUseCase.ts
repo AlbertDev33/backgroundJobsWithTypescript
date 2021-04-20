@@ -1,9 +1,13 @@
+import { resolve } from 'path';
+import { v4 as uuidV4 } from 'uuid';
+
 import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/protocol/IUsersRepositories';
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
 import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
 import { IRequestProvider } from '@shared/providers/RequestProvider/protocol/IRequestProvider';
+import { ISendMailProvider } from '@shared/providers/SendMailProvider/protocol/ISendMailProvider';
 
 import { ICreateUserUseCase } from './model/ICreateUserUseCase';
 
@@ -37,6 +41,8 @@ export class CreateUserUseCase implements ICreateUserUseCase {
     private passwordHashProvider: IPasswordHashProvider,
 
     private requestProvider: IRequestProvider,
+
+    private sendMailProvider: ISendMailProvider,
   ) {}
 
   async execute({
@@ -85,6 +91,33 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       city: localidade,
       state: uf,
       country: CountryEnum.Brasil,
+    });
+
+    const templatePath = resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      '..',
+      'shared',
+      'providers',
+      'SendMailProvider',
+      'MailTemplate',
+      'confirmUserMail.hbs',
+    );
+
+    const token = uuidV4();
+
+    const variables = {
+      name: user.name,
+      link: `http://localhost:3333/confirmation/confirm?token=${token}`,
+    };
+
+    await this.sendMailProvider.sendMail({
+      to: email,
+      subject: 'Confirmação de Cadastro',
+      variables,
+      path: templatePath,
     });
 
     return user;
