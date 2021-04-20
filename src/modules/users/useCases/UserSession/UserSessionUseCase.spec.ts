@@ -30,13 +30,15 @@ const makeUsersRepository = (): IUsersRepository => {
         email: 'any_mail@mail.com',
         password: 'hashed_password',
         cpf: '123456',
-        cep: 123456,
+        cep: '123456',
         street: 'valid_street',
         homeNumber: 100,
         district: 'valid_district',
         city: 'valid_city',
         state: 'valid_state',
         country: 'valid_country',
+        token: 'valid_token',
+        created_at: new Date(Date.now()),
       };
 
       return new Promise(resolve => resolve(fakeUser));
@@ -99,23 +101,25 @@ const makeSut = (): ISutTypes => {
 };
 
 describe('User Session', () => {
+  const fakeUser = {
+    id: 'valid_id',
+    name: 'valid_name',
+    email: 'any_mail@mail.com',
+    password: 'valid_password',
+    cpf: '123456',
+    cep: '123456',
+    street: 'valid_street',
+    homeNumber: 100,
+    district: 'valid_district',
+    city: 'valid_city',
+    state: 'valid_state',
+    country: 'valid_country',
+    token: 'valid_token',
+    created_at: new Date(Date.now()),
+  };
+
   it('Should be able to create a session for an registered user', async () => {
     const { sut, usersRepositoryStub } = makeSut();
-
-    const fakeUser = {
-      id: 'valid_id',
-      name: 'valid_name',
-      email: 'any_mail@mail.com',
-      password: 'valid_password',
-      cpf: '123456',
-      cep: 123456,
-      street: 'valid_street',
-      homeNumber: 100,
-      district: 'valid_district',
-      city: 'valid_city',
-      state: 'valid_state',
-      country: 'valid_country',
-    };
 
     jest
       .spyOn(usersRepositoryStub, 'findByEmail')
@@ -154,21 +158,6 @@ describe('User Session', () => {
 
   it('Should throw if invalid user password', async () => {
     const { sut, usersRepositoryStub, passwordHashProviderStub } = makeSut();
-
-    const fakeUser = {
-      id: 'valid_id',
-      name: 'valid_name',
-      email: 'any_mail@mail.com',
-      password: 'valid_password',
-      cpf: '123456',
-      cep: 123456,
-      street: 'valid_street',
-      homeNumber: 100,
-      district: 'valid_district',
-      city: 'valid_city',
-      state: 'valid_state',
-      country: 'valid_country',
-    };
 
     const userLogin = {
       email: 'any_mail@mail.com',
