@@ -4,7 +4,7 @@ export interface ICreateUserDTO {
   email: string;
   password: string;
   cpf: string;
-  cep: number;
+  cep: string;
   street: string;
   district: string;
   homeNumber: number;

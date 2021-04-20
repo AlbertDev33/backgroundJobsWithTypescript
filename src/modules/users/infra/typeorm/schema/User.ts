@@ -11,7 +11,7 @@ export class User {
 
   cpf: string;
 
-  cep: number;
+  cep: string;
 
   street: string;
 
