@@ -7,6 +7,10 @@ import { IRequestProvider } from '@shared/providers/RequestProvider/protocol/IRe
 
 import { ICreateUserUseCase } from './model/ICreateUserUseCase';
 
+enum CountryEnum {
+  Brasil = 'Brasil',
+}
+
 export interface IRequest {
   name: string;
   email: string;
@@ -80,7 +84,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       district: bairro,
       city: localidade,
       state: uf,
-      country: 'Brasil',
+      country: CountryEnum.Brasil,
     });
 
     return user;
