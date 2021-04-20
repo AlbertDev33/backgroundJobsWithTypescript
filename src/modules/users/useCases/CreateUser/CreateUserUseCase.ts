@@ -79,20 +79,6 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       password,
     );
 
-    const user = await this.usersRepository.create({
-      name,
-      email,
-      password: hashedPassword,
-      cpf,
-      cep,
-      street: logradouro,
-      homeNumber,
-      district: bairro,
-      city: localidade,
-      state: uf,
-      country: CountryEnum.Brasil,
-    });
-
     const templatePath = resolve(
       __dirname,
       '..',
@@ -107,6 +93,21 @@ export class CreateUserUseCase implements ICreateUserUseCase {
     );
 
     const token = uuidV4();
+
+    const user = await this.usersRepository.create({
+      name,
+      email,
+      password: hashedPassword,
+      cpf,
+      cep,
+      street: logradouro,
+      homeNumber,
+      district: bairro,
+      city: localidade,
+      state: uf,
+      country: CountryEnum.Brasil,
+      token,
+    });
 
     const variables = {
       name: user.name,
