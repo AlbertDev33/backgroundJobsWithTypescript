@@ -1,13 +1,28 @@
-import { ICreateUserDTO } from '@modules/users/dtos/ICreateUserDTO';
 import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/protocol/IUsersRepositories';
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
 import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
+import { IRequestProvider } from '@shared/providers/RequestProvider/protocol/IRequestProvider';
 
 import { ICreateUserUseCase } from './model/ICreateUserUseCase';
 
-export type IRequest = Omit<ICreateUserDTO, 'id'>;
+export interface IRequest {
+  name: string;
+  email: string;
+  password: string;
+  cpf: string;
+  cep: string;
+  homeNumber: number;
+}
+
+export interface IResponseSource {
+  readonly cep: string;
+  readonly logradouro: string;
+  readonly bairro: string;
+  readonly localidade: string;
+  readonly uf: string;
+}
 
 export class CreateUserUseCase implements ICreateUserUseCase {
   constructor(
@@ -16,6 +31,8 @@ export class CreateUserUseCase implements ICreateUserUseCase {
     private cpfValidatorProvider: ICpfValidatorProvider,
 
     private passwordHashProvider: IPasswordHashProvider,
+
+    private requestProvider: IRequestProvider,
   ) {}
 
   async execute({
@@ -24,12 +41,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
     password,
     cpf,
     cep,
-    street,
     homeNumber,
-    district,
-    city,
-    state,
-    country,
   }: IRequest): Promise<User> {
     const findUser = await this.usersRepository.findByEmail(email);
 
@@ -43,6 +55,16 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       throw new AppError('Invalid CPF');
     }
 
+    const validacep = /^[0-9]{8}$/;
+
+    if (!validacep.test(cep)) {
+      throw new AppError('Invalid CEP number!');
+    }
+
+    const apiResponse = await this.callCepApi(cep);
+
+    const { bairro, logradouro, localidade, uf } = apiResponse;
+
     const hashedPassword = await this.passwordHashProvider.generateHash(
       password,
     );
@@ -53,14 +75,24 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       password: hashedPassword,
       cpf,
       cep,
-      street,
+      street: logradouro,
       homeNumber,
-      district,
-      city,
-      state,
-      country,
+      district: bairro,
+      city: localidade,
+      state: uf,
+      country: 'Brasil',
     });
 
     return user;
+  }
+
+  private async callCepApi(cep: string): Promise<IResponseSource> {
+    const response = await this.requestProvider.get<IResponseSource>(
+      `https://viacep.com.br/ws/${cep}/json/`,
+    );
+
+    const { data } = response;
+
+    return data;
   }
 }
