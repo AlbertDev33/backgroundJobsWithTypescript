@@ -11,4 +11,5 @@ export interface ICreateUserDTO {
   city: string;
   state: string;
   country: string;
+  token: string;
 }

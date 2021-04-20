@@ -42,6 +42,8 @@ const makeUsersRepository = (): IUsersRepository => {
         city: 'valid_city',
         state: 'valid_state',
         country: 'valid_country',
+        token: 'valid_token',
+        created_at: new Date(Date.now()),
       };
 
       return new Promise(resolve => resolve(fakeUser));
@@ -187,6 +189,8 @@ describe('Create Users', () => {
       city: 'valid_city',
       state: 'valid_state',
       country: 'valid_country',
+      token: 'valid_token',
+      created_at: new Date(Date.now()),
     };
 
     jest
@@ -234,6 +238,8 @@ describe('Create Users', () => {
       city: 'São Paulo',
       state: 'SP',
       country: 'Brasil',
+      token: 'valid_token',
+      created_at: new Date(Date.now()),
     };
 
     jest

@@ -19,6 +19,7 @@ export class UsersRepository implements IUsersRepository {
     city,
     state,
     country,
+    token,
   }: ICreateUserDTO): Promise<User> {
     const user = new User();
 
@@ -35,6 +36,7 @@ export class UsersRepository implements IUsersRepository {
       city,
       state,
       country,
+      token,
     });
 
     this.users.push(user);
