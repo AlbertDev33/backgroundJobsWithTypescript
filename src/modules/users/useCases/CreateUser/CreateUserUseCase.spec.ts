@@ -5,6 +5,11 @@ import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
 import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
+import { IRequestProvider } from '@shared/providers/RequestProvider/protocol/IRequestProvider';
+import {
+  IRequestConfig,
+  IResponse,
+} from '@shared/providers/RequestProvider/RequestProvider';
 
 import { CreateUserUseCase } from './CreateUserUseCase';
 
@@ -13,6 +18,7 @@ interface ISutTypes {
   usersRepositoryStub: IUsersRepository;
   cpfValidatorStub: ICpfValidatorProvider;
   passwordHashProviderStub: IPasswordHashProvider;
+  requestProviderStub: IRequestProvider;
 }
 
 const makeUsersRepository = (): IUsersRepository => {
@@ -24,7 +30,7 @@ const makeUsersRepository = (): IUsersRepository => {
         email: 'any_mail@mail.com',
         password: 'hashed_password',
         cpf: '123456',
-        cep: 123456,
+        cep: '123456',
         street: 'valid_street',
         homeNumber: 100,
         district: 'valid_district',
@@ -69,15 +75,41 @@ const makePasswordHash = (): IPasswordHashProvider => {
   return new PasswordHashProviderStub();
 };
 
+const makeRequestProvider = (): IRequestProvider => {
+  class RequestProviderStub implements IRequestProvider {
+    get<IResponseSource>(
+      url: string,
+      config?: IRequestConfig,
+    ): Promise<IResponse<IResponseSource>> {
+      const mockedReturnAxios = {
+        cep: '11001-765',
+        logradouro: 'Praça da Sé',
+        complemento: 'lado ímpar',
+        bairro: 'Sé',
+        localidade: 'São Paulo',
+        uf: 'SP',
+      };
+
+      return new Promise(resolve =>
+        resolve({ data: mockedReturnAxios } as IResponse),
+      );
+    }
+  }
+
+  return new RequestProviderStub();
+};
+
 const makeSut = (): ISutTypes => {
   const usersRepositoryStub = makeUsersRepository();
   const cpfValidatorStub = makeCpfValidator();
   const passwordHashProviderStub = makePasswordHash();
+  const requestProviderStub = makeRequestProvider();
 
   const sut = new CreateUserUseCase(
     usersRepositoryStub,
     cpfValidatorStub,
     passwordHashProviderStub,
+    requestProviderStub,
   );
 
   return {
@@ -85,26 +117,31 @@ const makeSut = (): ISutTypes => {
     sut,
     cpfValidatorStub,
     passwordHashProviderStub,
+    requestProviderStub,
   };
 };
 
-describe('Users', () => {
+describe('Create Users', () => {
+  const mockedReturnAxios = {
+    cep: '11001-765',
+    logradouro: 'Praça da Sé',
+    complemento: 'lado ímpar',
+    bairro: 'Sé',
+    localidade: 'São Paulo',
+    uf: 'SP',
+  };
+
+  const fakeUser = {
+    name: 'valid_name',
+    email: 'valid_email@mail.com',
+    password: 'valid_password',
+    cpf: '123456',
+    cep: '11001765',
+    homeNumber: 100,
+  };
+
   it('Should be able to create a valid user', async () => {
     const { sut } = makeSut();
-
-    const fakeUser = {
-      name: 'valid_name',
-      email: 'valid_email@mail.com',
-      password: 'hashed_password',
-      cpf: '123456',
-      cep: 123456,
-      street: 'valid_street',
-      homeNumber: 100,
-      district: 'valid_district',
-      city: 'valid_city',
-      state: 'valid_state',
-      country: 'valid_country',
-    };
 
     const user = await sut.execute(fakeUser);
 
@@ -114,13 +151,13 @@ describe('Users', () => {
   it('Should not be able to create a user with used email', async () => {
     const { sut, usersRepositoryStub } = makeSut();
 
-    const fakeUser = {
+    const userTest = {
       id: 'valid_id',
       name: 'valid_name',
-      email: 'any_mail@mail.com',
+      email: 'valid_email@mail.com',
       password: 'hashed_password',
       cpf: '123456',
-      cep: 123456,
+      cep: '11001765',
       street: 'valid_street',
       homeNumber: 100,
       district: 'valid_district',
@@ -131,7 +168,7 @@ describe('Users', () => {
 
     jest
       .spyOn(usersRepositoryStub, 'findByEmail')
-      .mockReturnValue(new Promise(resolve => resolve(fakeUser)));
+      .mockReturnValue(new Promise(resolve => resolve(userTest)));
 
     const invalidUser = sut.execute(fakeUser);
 
@@ -140,21 +177,6 @@ describe('Users', () => {
 
   it('Should not be able to create a user with invalid cpf', async () => {
     const { sut, cpfValidatorStub } = makeSut();
-
-    const fakeUser = {
-      id: 'valid_id',
-      name: 'valid_name',
-      email: 'any_mail@mail.com',
-      password: 'hashed_password',
-      cpf: '123456',
-      cep: 123456,
-      street: 'valid_street',
-      homeNumber: 100,
-      district: 'valid_district',
-      city: 'valid_city',
-      state: 'valid_state',
-      country: 'valid_country',
-    };
 
     jest.spyOn(cpfValidatorStub, 'isValid').mockReturnValueOnce(false);
 
@@ -168,23 +190,48 @@ describe('Users', () => {
   it('Should be able to hash the user password', async () => {
     const { sut } = makeSut();
 
-    const fakeUser = {
-      id: 'valid_id',
-      name: 'valid_name',
-      email: 'any_mail@mail.com',
-      password: 'hashed_password',
-      cpf: '123456',
-      cep: 123456,
-      street: 'valid_street',
-      homeNumber: 100,
-      district: 'valid_district',
-      city: 'valid_city',
-      state: 'valid_state',
-      country: 'valid_country',
-    };
-
     const hashedPasswordUser = await sut.execute(fakeUser);
 
     expect(hashedPasswordUser.password).toEqual('hashed_password');
+  });
+
+  it('Should return address for a valid user params', async () => {
+    const { sut, usersRepositoryStub } = makeSut();
+
+    const userTest = {
+      id: 'valid_id',
+      name: 'valid_name',
+      email: 'valid_email@mail.com',
+      password: 'hashed_password',
+      cpf: '123456',
+      cep: '11001-765',
+      street: 'Praça da Sé',
+      homeNumber: 100,
+      district: 'Sé',
+      city: 'São Paulo',
+      state: 'SP',
+      country: 'Brasil',
+    };
+
+    jest
+      .spyOn(usersRepositoryStub, 'create')
+      .mockReturnValueOnce(new Promise(resolve => resolve(userTest)));
+
+    const returnApi = await sut.execute(fakeUser);
+
+    expect(returnApi).toEqual(userTest);
+  });
+
+  it('Should not be able to call api if invalid cep', async () => {
+    const { sut } = makeSut();
+
+    const userTest = {
+      ...fakeUser,
+      cep: 'invalid_cep',
+    };
+
+    const response = sut.execute(userTest);
+
+    await expect(response).rejects.toEqual(new AppError('Invalid CEP number!'));
   });
 });
