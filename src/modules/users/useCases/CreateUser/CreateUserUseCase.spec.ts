@@ -10,6 +10,10 @@ import {
   IRequestConfig,
   IResponse,
 } from '@shared/providers/RequestProvider/RequestProvider';
+import {
+  ISendMail,
+  ISendMailProvider,
+} from '@shared/providers/SendMailProvider/protocol/ISendMailProvider';
 
 import { CreateUserUseCase } from './CreateUserUseCase';
 
@@ -19,6 +23,7 @@ interface ISutTypes {
   cpfValidatorStub: ICpfValidatorProvider;
   passwordHashProviderStub: IPasswordHashProvider;
   requestProviderStub: IRequestProvider;
+  sendMailProvider: ISendMailProvider;
 }
 
 const makeUsersRepository = (): IUsersRepository => {
@@ -99,17 +104,34 @@ const makeRequestProvider = (): IRequestProvider => {
   return new RequestProviderStub();
 };
 
+const makeSendMailProvider = (): ISendMailProvider => {
+  class SendMailProviderStub implements ISendMailProvider {
+    async sendMail({ to, subject, variables, path }: ISendMail): Promise<void> {
+      const sendMail = {
+        to,
+        from: 'Equipe de Autenticação!',
+        subject,
+        html: '',
+      };
+    }
+  }
+
+  return new SendMailProviderStub();
+};
+
 const makeSut = (): ISutTypes => {
   const usersRepositoryStub = makeUsersRepository();
   const cpfValidatorStub = makeCpfValidator();
   const passwordHashProviderStub = makePasswordHash();
   const requestProviderStub = makeRequestProvider();
+  const sendMailProvider = makeSendMailProvider();
 
   const sut = new CreateUserUseCase(
     usersRepositoryStub,
     cpfValidatorStub,
     passwordHashProviderStub,
     requestProviderStub,
+    sendMailProvider,
   );
 
   return {
@@ -118,6 +140,7 @@ const makeSut = (): ISutTypes => {
     cpfValidatorStub,
     passwordHashProviderStub,
     requestProviderStub,
+    sendMailProvider,
   };
 };
 
@@ -233,5 +256,15 @@ describe('Create Users', () => {
     const response = sut.execute(userTest);
 
     await expect(response).rejects.toEqual(new AppError('Invalid CEP number!'));
+  });
+
+  it('Should be able to send a register confirmation mail to user', async () => {
+    const { sut, sendMailProvider } = makeSut();
+
+    const sendMail = jest.spyOn(sendMailProvider, 'sendMail');
+
+    await sut.execute(fakeUser);
+
+    expect(sendMail).toHaveBeenCalled();
   });
 });
