@@ -4,4 +4,5 @@ import { User } from '@modules/users/infra/typeorm/schema/User';
 export interface IUsersRepository {
   create(data: ICreateUserDTO): Promise<User>;
   findByEmail(email: string): Promise<User | undefined>;
+  findByToken(token: string): Promise<User | undefined>;
 }

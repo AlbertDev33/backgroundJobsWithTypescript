@@ -43,6 +43,7 @@ const makeUsersRepository = (): IUsersRepository => {
         state: 'valid_state',
         country: 'valid_country',
         token: 'valid_token',
+        confirmation: false,
         created_at: new Date(Date.now()),
       };
 
@@ -50,6 +51,10 @@ const makeUsersRepository = (): IUsersRepository => {
     }
 
     findByEmail(email: string): Promise<User | undefined> {
+      return new Promise(resolve => resolve(undefined));
+    }
+
+    findByToken(token: string): Promise<User | undefined> {
       return new Promise(resolve => resolve(undefined));
     }
   }
@@ -147,15 +152,6 @@ const makeSut = (): ISutTypes => {
 };
 
 describe('Create Users', () => {
-  const mockedReturnAxios = {
-    cep: '11001-765',
-    logradouro: 'Praça da Sé',
-    complemento: 'lado ímpar',
-    bairro: 'Sé',
-    localidade: 'São Paulo',
-    uf: 'SP',
-  };
-
   const fakeUser = {
     name: 'valid_name',
     email: 'valid_email@mail.com',
@@ -190,6 +186,7 @@ describe('Create Users', () => {
       state: 'valid_state',
       country: 'valid_country',
       token: 'valid_token',
+      confirmation: false,
       created_at: new Date(Date.now()),
     };
 
@@ -239,6 +236,7 @@ describe('Create Users', () => {
       state: 'SP',
       country: 'Brasil',
       token: 'valid_token',
+      confirmation: false,
       created_at: new Date(Date.now()),
     };
 

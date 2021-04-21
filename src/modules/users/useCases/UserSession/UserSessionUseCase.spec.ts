@@ -38,6 +38,7 @@ const makeUsersRepository = (): IUsersRepository => {
         state: 'valid_state',
         country: 'valid_country',
         token: 'valid_token',
+        confirmation: false,
         created_at: new Date(Date.now()),
       };
 
@@ -45,6 +46,10 @@ const makeUsersRepository = (): IUsersRepository => {
     }
 
     findByEmail(email: string): Promise<User | undefined> {
+      return new Promise(resolve => resolve(undefined));
+    }
+
+    findByToken(token: string): Promise<User | undefined> {
       return new Promise(resolve => resolve(undefined));
     }
   }
@@ -115,8 +120,46 @@ describe('User Session', () => {
     state: 'valid_state',
     country: 'valid_country',
     token: 'valid_token',
+    confirmation: true,
     created_at: new Date(Date.now()),
   };
+
+  it('Should throw if user not confirmed', async () => {
+    const { sut, usersRepositoryStub } = makeSut();
+
+    const userTest = {
+      id: 'valid_id',
+      name: 'valid_name',
+      email: 'valid_email@mail.com',
+      password: 'valid_password',
+      cpf: '123456',
+      cep: '123456',
+      street: 'valid_street',
+      homeNumber: 100,
+      district: 'valid_district',
+      city: 'valid_city',
+      state: 'valid_state',
+      country: 'valid_country',
+      token: 'valid_token',
+      confirmation: false,
+      created_at: new Date(Date.now()),
+    };
+
+    const fakeUser = {
+      email: 'valid_email@mail.com',
+      password: 'valid_password',
+    };
+
+    jest
+      .spyOn(usersRepositoryStub, 'findByEmail')
+      .mockReturnValueOnce(new Promise(resolve => resolve(userTest)));
+
+    const invalidConfirmationUser = sut.execute(fakeUser);
+
+    await expect(invalidConfirmationUser).rejects.toEqual(
+      new AppError('User not Confirmed! Please, Confirm Your E-mail Address.'),
+    );
+  });
 
   it('Should be able to create a session for an registered user', async () => {
     const { sut, usersRepositoryStub } = makeSut();
@@ -134,7 +177,7 @@ describe('User Session', () => {
     expect(userSession.user).toBeTruthy();
   });
 
-  it('Should throw if invalid user email', async () => {
+  it('Should throw if invalid user e-mail', async () => {
     const { sut, usersRepositoryStub } = makeSut();
 
     const fakeUser = {
