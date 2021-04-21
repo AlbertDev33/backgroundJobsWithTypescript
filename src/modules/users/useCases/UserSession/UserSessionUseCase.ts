@@ -45,6 +45,10 @@ export class UserSessionUseCase implements IUserSessionUseCase {
       throw new AppError('Invalid e-mail or password!');
     }
 
+    if (!existsUser.confirmation) {
+      throw new AppError('User not Confirmed! Please, confirm your e-mail.');
+    }
+
     const token = this.generateToken(existsUser.id);
 
     return {
