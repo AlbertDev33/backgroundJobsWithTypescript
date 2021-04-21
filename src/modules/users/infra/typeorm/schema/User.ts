@@ -27,6 +27,8 @@ export class User {
 
   token: string;
 
+  confirmation: boolean;
+
   created_at: Date;
 
   constructor() {

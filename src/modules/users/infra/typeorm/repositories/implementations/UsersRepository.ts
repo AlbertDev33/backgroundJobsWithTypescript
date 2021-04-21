@@ -20,6 +20,7 @@ export class UsersRepository implements IUsersRepository {
     state,
     country,
     token,
+    confirmation,
   }: ICreateUserDTO): Promise<User> {
     const user = new User();
 
@@ -37,6 +38,7 @@ export class UsersRepository implements IUsersRepository {
       state,
       country,
       token,
+      confirmation,
     });
 
     this.users.push(user);
@@ -46,6 +48,12 @@ export class UsersRepository implements IUsersRepository {
 
   async findByEmail(email: string): Promise<User | undefined> {
     const user = this.users.find(user => user.email === email);
+
+    return user;
+  }
+
+  async findByToken(token: string): Promise<User | undefined> {
+    const user = this.users.find(user => user.token === token);
 
     return user;
   }

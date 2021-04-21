@@ -107,6 +107,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       state: uf,
       country: CountryEnum.Brasil,
       token,
+      confirmation: false,
     });
 
     const variables = {

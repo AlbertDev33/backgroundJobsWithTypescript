@@ -12,4 +12,5 @@ export interface ICreateUserDTO {
   state: string;
   country: string;
   token: string;
+  confirmation: boolean;
 }
