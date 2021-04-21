@@ -1,9 +1,12 @@
 /* eslint-disable max-classes-per-file */
+import { v4 } from 'uuid';
+
 import { ICreateUserDTO } from '@modules/users/dtos/ICreateUserDTO';
 import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/protocol/IUsersRepositories';
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
+import { IFilePathProvider } from '@shared/providers/FilePathProvider/model/IFilePathProvider';
 import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
 import { IRequestProvider } from '@shared/providers/RequestProvider/protocol/IRequestProvider';
 import {
@@ -14,6 +17,7 @@ import {
   ISendMail,
   ISendMailProvider,
 } from '@shared/providers/SendMailProvider/protocol/ISendMailProvider';
+import { IUniqueIdProvider } from '@shared/providers/UniqueIdProvider/protocol/IUniqueIdProvider';
 
 import { CreateUserUseCase } from './CreateUserUseCase';
 
@@ -126,12 +130,37 @@ const makeSendMailProvider = (): ISendMailProvider => {
   return new SendMailProviderStub();
 };
 
+const makeFilePathProvider = (): IFilePathProvider => {
+  class FilePathProviderStub implements IFilePathProvider {
+    resolve(...pathSegments: string[]): string {
+      return '';
+    }
+    basename(filePath: string, ext?: string): string {
+      return '';
+    }
+  }
+
+  return new FilePathProviderStub();
+};
+
+const makeUniqueIdProvider = (): IUniqueIdProvider => {
+  class UniqueIdProviderStub implements IUniqueIdProvider {
+    uuid(): string {
+      return v4();
+    }
+  }
+
+  return new UniqueIdProviderStub();
+};
+
 const makeSut = (): ISutTypes => {
   const usersRepositoryStub = makeUsersRepository();
   const cpfValidatorStub = makeCpfValidator();
   const passwordHashProviderStub = makePasswordHash();
   const requestProviderStub = makeRequestProvider();
   const sendMailProvider = makeSendMailProvider();
+  const filePathProviderStub = makeFilePathProvider();
+  const uniqueIdProviderStub = makeUniqueIdProvider();
 
   const sut = new CreateUserUseCase(
     usersRepositoryStub,
@@ -139,6 +168,8 @@ const makeSut = (): ISutTypes => {
     passwordHashProviderStub,
     requestProviderStub,
     sendMailProvider,
+    filePathProviderStub,
+    uniqueIdProviderStub,
   );
 
   return {

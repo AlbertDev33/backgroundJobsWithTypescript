@@ -1,13 +1,12 @@
-import { resolve } from 'path';
-import { v4 as uuidV4 } from 'uuid';
-
 import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/protocol/IUsersRepositories';
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
+import { IFilePathProvider } from '@shared/providers/FilePathProvider/model/IFilePathProvider';
 import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
 import { IRequestProvider } from '@shared/providers/RequestProvider/protocol/IRequestProvider';
 import { ISendMailProvider } from '@shared/providers/SendMailProvider/protocol/ISendMailProvider';
+import { IUniqueIdProvider } from '@shared/providers/UniqueIdProvider/protocol/IUniqueIdProvider';
 
 import { ICreateUserUseCase } from './model/ICreateUserUseCase';
 
@@ -43,6 +42,10 @@ export class CreateUserUseCase implements ICreateUserUseCase {
     private requestProvider: IRequestProvider,
 
     private sendMailProvider: ISendMailProvider,
+
+    private filePathProvider: IFilePathProvider,
+
+    private uniqueIdProvider: IUniqueIdProvider,
   ) {}
 
   async execute({
@@ -79,7 +82,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       password,
     );
 
-    const templatePath = resolve(
+    const templatePath = this.filePathProvider.resolve(
       __dirname,
       '..',
       '..',
@@ -92,7 +95,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       'confirmUserMail.hbs',
     );
 
-    const token = uuidV4();
+    const token = this.uniqueIdProvider.uuid();
 
     const user = await this.usersRepository.create({
       name,
