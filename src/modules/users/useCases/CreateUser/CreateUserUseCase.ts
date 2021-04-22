@@ -2,10 +2,9 @@ import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/prot
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
-import { IFilePathProvider } from '@shared/providers/FilePathProvider/model/IFilePathProvider';
 import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
+import { IQueueProvider } from '@shared/providers/QueueProvider/protocol/IQueueProvider';
 import { IRequestProvider } from '@shared/providers/RequestProvider/protocol/IRequestProvider';
-import { ISendMailProvider } from '@shared/providers/SendMailProvider/protocol/ISendMailProvider';
 import { IUniqueIdProvider } from '@shared/providers/UniqueIdProvider/protocol/IUniqueIdProvider';
 
 import { ICreateUserUseCase } from './model/ICreateUserUseCase';
@@ -41,11 +40,9 @@ export class CreateUserUseCase implements ICreateUserUseCase {
 
     private requestProvider: IRequestProvider,
 
-    private sendMailProvider: ISendMailProvider,
-
-    private filePathProvider: IFilePathProvider,
-
     private uniqueIdProvider: IUniqueIdProvider,
+
+    private queueProvider: IQueueProvider,
   ) {}
 
   async execute({
@@ -82,19 +79,6 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       password,
     );
 
-    const templatePath = this.filePathProvider.resolve(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      '..',
-      'shared',
-      'providers',
-      'SendMailProvider',
-      'MailTemplate',
-      'confirmUserMail.hbs',
-    );
-
     const token = this.uniqueIdProvider.uuid();
 
     const user = await this.usersRepository.create({
@@ -113,17 +97,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       confirmation: false,
     });
 
-    const variables = {
-      name: user.name,
-      link: `http://localhost:3333/confirmation/confirm?token=${token}`,
-    };
-
-    await this.sendMailProvider.sendMail({
-      to: email,
-      subject: 'Confirmação de Cadastro',
-      variables,
-      path: templatePath,
-    });
+    await this.queueProvider.addQueue('RegistrationMail', user);
 
     return user;
   }

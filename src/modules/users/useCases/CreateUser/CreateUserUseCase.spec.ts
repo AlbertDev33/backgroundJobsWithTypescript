@@ -1,4 +1,5 @@
 /* eslint-disable max-classes-per-file */
+import Queue from 'bull';
 import { v4 } from 'uuid';
 
 import { ICreateUserDTO } from '@modules/users/dtos/ICreateUserDTO';
@@ -6,17 +7,13 @@ import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/prot
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 import { ICpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/protocol/ICpfValidatorProvider';
-import { IFilePathProvider } from '@shared/providers/FilePathProvider/model/IFilePathProvider';
 import { IPasswordHashProvider } from '@shared/providers/HashProvider/protocol/IPasswordHashProvider';
+import { IQueueProvider } from '@shared/providers/QueueProvider/protocol/IQueueProvider';
 import { IRequestProvider } from '@shared/providers/RequestProvider/protocol/IRequestProvider';
 import {
   IRequestConfig,
   IResponse,
 } from '@shared/providers/RequestProvider/RequestProvider';
-import {
-  ISendMail,
-  ISendMailProvider,
-} from '@shared/providers/SendMailProvider/protocol/ISendMailProvider';
 import { IUniqueIdProvider } from '@shared/providers/UniqueIdProvider/protocol/IUniqueIdProvider';
 
 import { CreateUserUseCase } from './CreateUserUseCase';
@@ -27,7 +24,7 @@ interface ISutTypes {
   cpfValidatorStub: ICpfValidatorProvider;
   passwordHashProviderStub: IPasswordHashProvider;
   requestProviderStub: IRequestProvider;
-  sendMailProvider: ISendMailProvider;
+  queueProviderStub: IQueueProvider;
 }
 
 const makeUsersRepository = (): IUsersRepository => {
@@ -115,32 +112,20 @@ const makeRequestProvider = (): IRequestProvider => {
   return new RequestProviderStub();
 };
 
-const makeSendMailProvider = (): ISendMailProvider => {
-  class SendMailProviderStub implements ISendMailProvider {
-    async sendMail({ to, subject, variables, path }: ISendMail): Promise<void> {
-      const sendMail = {
-        to,
-        from: 'Equipe de Autenticação!',
-        subject,
-        html: '',
-      };
+const makeQueueProvider = (): IQueueProvider => {
+  class QueueProviderStub implements IQueueProvider {
+    async addQueue(
+      queueName: string,
+      data: any,
+    ): Promise<Queue.Job | undefined> {
+      return undefined;
+    }
+    async processQueue(): Promise<void> {
+      Array.prototype.forEach(test => test);
     }
   }
 
-  return new SendMailProviderStub();
-};
-
-const makeFilePathProvider = (): IFilePathProvider => {
-  class FilePathProviderStub implements IFilePathProvider {
-    resolve(...pathSegments: string[]): string {
-      return '';
-    }
-    basename(filePath: string, ext?: string): string {
-      return '';
-    }
-  }
-
-  return new FilePathProviderStub();
+  return new QueueProviderStub();
 };
 
 const makeUniqueIdProvider = (): IUniqueIdProvider => {
@@ -158,18 +143,16 @@ const makeSut = (): ISutTypes => {
   const cpfValidatorStub = makeCpfValidator();
   const passwordHashProviderStub = makePasswordHash();
   const requestProviderStub = makeRequestProvider();
-  const sendMailProvider = makeSendMailProvider();
-  const filePathProviderStub = makeFilePathProvider();
   const uniqueIdProviderStub = makeUniqueIdProvider();
+  const queueProviderStub = makeQueueProvider();
 
   const sut = new CreateUserUseCase(
     usersRepositoryStub,
     cpfValidatorStub,
     passwordHashProviderStub,
     requestProviderStub,
-    sendMailProvider,
-    filePathProviderStub,
     uniqueIdProviderStub,
+    queueProviderStub,
   );
 
   return {
@@ -178,7 +161,7 @@ const makeSut = (): ISutTypes => {
     cpfValidatorStub,
     passwordHashProviderStub,
     requestProviderStub,
-    sendMailProvider,
+    queueProviderStub,
   };
 };
 
@@ -293,13 +276,13 @@ describe('Create Users', () => {
     await expect(response).rejects.toEqual(new AppError('Invalid CEP number!'));
   });
 
-  it('Should be able to send a register confirmation mail to user', async () => {
-    const { sut, sendMailProvider } = makeSut();
+  it('Should be able to call queue', async () => {
+    const { sut, queueProviderStub } = makeSut();
 
-    const sendMail = jest.spyOn(sendMailProvider, 'sendMail');
+    const spyQueue = jest.spyOn(queueProviderStub, 'addQueue');
 
     await sut.execute(fakeUser);
 
-    expect(sendMail).toHaveBeenCalled();
+    expect(spyQueue).toHaveBeenCalled();
   });
 });
