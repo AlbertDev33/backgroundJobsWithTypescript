@@ -1,0 +1,13 @@
+{
+    "type": "postgres",
+    "port": 5432,
+    "host": "localhost",
+    "username": "postgres",
+    "password": "postgres",
+    "database": "backjobs",
+    "migrations": ["./src/shared/ínfra/typeorm/migrations/*.ts"],
+    "entities": ["./src/modules/**/schema/*.ts"],
+    "cli": {
+        "migrationsDir": "./src/shared/ínfra/typeorm/migrations"
+    }
+}

@@ -1,4 +1,4 @@
-import { v4 } from 'uuid';
+import { getRepository, Repository } from 'typeorm';
 
 import { ICreateUserDTO } from '@modules/users/dtos/ICreateUserDTO';
 import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/protocol/IUsersRepositories';
@@ -6,10 +6,13 @@ import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/prot
 import { User } from '../../schema/User';
 
 export class UsersRepository implements IUsersRepository {
-  private users: User[] = [];
+  private repository: Repository<User>;
+
+  constructor() {
+    this.repository = getRepository(User);
+  }
 
   async create({
-    id,
     name,
     email,
     password,
@@ -24,10 +27,7 @@ export class UsersRepository implements IUsersRepository {
     token,
     confirmation,
   }: ICreateUserDTO): Promise<User> {
-    const user = new User();
-
-    Object.assign(user, {
-      id: v4(),
+    const user = this.repository.create({
       name,
       email,
       password,
@@ -43,19 +43,19 @@ export class UsersRepository implements IUsersRepository {
       confirmation,
     });
 
-    this.users.push(user);
+    await this.repository.save(user);
 
     return user;
   }
 
   async findByEmail(email: string): Promise<User | undefined> {
-    const user = this.users.find(user => user.email === email);
+    const user = await this.repository.findOne({ email });
 
     return user;
   }
 
   async findByToken(token: string): Promise<User | undefined> {
-    const user = this.users.find(user => user.token === token);
+    const user = await this.repository.findOne({ token });
 
     return user;
   }
