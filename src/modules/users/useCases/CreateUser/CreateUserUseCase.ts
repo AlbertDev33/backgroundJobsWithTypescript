@@ -97,7 +97,11 @@ export class CreateUserUseCase implements ICreateUserUseCase {
       confirmation: false,
     });
 
-    await this.queueProvider.addQueue('RegistrationMail', user);
+    await this.queueProvider.addQueue('RegistrationMail', {
+      name,
+      token,
+      email,
+    });
 
     return user;
   }
