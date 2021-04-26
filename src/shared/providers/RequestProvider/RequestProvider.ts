@@ -11,6 +11,6 @@ export class RequestProvider implements IRequestProvider {
   constructor(private request = axios) {}
 
   get<T>(url: string, config?: IRequestConfig): Promise<IResponse<T>> {
-    return this.request.post<T, IResponse<T>>(url, config);
+    return this.request.get<T, IResponse<T>>(url, config);
   }
 }
