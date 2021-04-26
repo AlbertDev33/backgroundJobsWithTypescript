@@ -2,7 +2,10 @@ import { IUsersRepository } from '@modules/users/infra/typeorm/repositories/prot
 import { User } from '@modules/users/infra/typeorm/schema/User';
 import { AppError } from '@shared/errors/AppError';
 
-export class RegisterConfirmationUseCase {
+import { IRegisterConfirmationUseCase } from './model/IRegisterConfirmationUseCase';
+
+export class RegisterConfirmationUseCase
+  implements IRegisterConfirmationUseCase {
   constructor(private usersRepository: IUsersRepository) {}
 
   async execute(token: string): Promise<User> {
