@@ -4,7 +4,7 @@ import nodemailer, { Transporter } from 'nodemailer';
 
 import { ISendMailProvider, ISendMail } from './protocol/ISendMailProvider';
 
-export class EtherealMailProvider implements ISendMailProvider {
+class EtherealMailProvider implements ISendMailProvider {
   private client: Transporter;
 
   constructor() {
@@ -34,8 +34,14 @@ export class EtherealMailProvider implements ISendMailProvider {
     const templateHTML = templateParse(variables);
 
     const message = await this.client.sendMail({
-      to,
-      from: 'Equipe de Autenticação!',
+      to: {
+        name: to.name,
+        address: to.address,
+      },
+      from: {
+        name: 'Equipe de Autenticação!',
+        address: 'teste@mail.com',
+      },
       subject,
       html: templateHTML,
     });
@@ -44,3 +50,5 @@ export class EtherealMailProvider implements ISendMailProvider {
     console.log('Preview URL: %s', nodemailer.getTestMessageUrl(message));
   }
 }
+
+export default new EtherealMailProvider();

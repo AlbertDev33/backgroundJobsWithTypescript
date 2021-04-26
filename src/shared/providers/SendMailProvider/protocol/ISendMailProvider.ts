@@ -1,5 +1,12 @@
 export interface ISendMail {
-  to: string;
+  to: {
+    name: string;
+    address: string;
+  };
+  from?: {
+    name: string;
+    address: string;
+  };
   subject: string;
   variables: any;
   path: string;
