@@ -1,10 +1,10 @@
 import express from 'express';
 
-import createConnection from '@shared/infra/typeorm';
+import { openConnection } from '@shared/infra/typeorm';
 
 import setupMiddlewares from './middlewares';
 
-createConnection();
+openConnection();
 const app = express();
 setupMiddlewares(app);
 

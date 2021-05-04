@@ -1,6 +1,6 @@
 import Queue from 'bull';
 
-import { ISendMailSource } from '@shared/providers/QueueProvider/SendMailService/implementations/SendMailUseCase';
+import { ISendMailSource } from '@modules/users/useCases/SendMail/SendMailUseCase';
 
 export interface IQueueProvider {
   addQueue(

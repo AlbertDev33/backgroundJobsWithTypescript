@@ -18,6 +18,8 @@ export class RegisterConfirmationUseCase
     const userConfirmed = true;
     user.confirmation = userConfirmed;
 
+    await this.usersRepository.create(user);
+
     return user;
   }
 }

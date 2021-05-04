@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import express, { Request, Response, NextFunction, Router } from 'express';
 
-import { IExpressRequestProvider } from './protocol/IExpressRequestProvider';
-
 export interface IRequest extends Request {
   user: {
     id: string;
@@ -20,12 +18,3 @@ export const Route = (): IRouter => {
 
   return router;
 };
-
-export class ExpressRequestProvider implements IExpressRequestProvider {
-  async handle(
-    request: IRequest,
-    response: IResponse,
-  ): Promise<IRequest | IResponse> {
-    return request && response;
-  }
-}

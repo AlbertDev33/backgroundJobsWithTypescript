@@ -1,4 +1,5 @@
 import { UsersRepository } from '@modules/users/infra/typeorm/repositories/implementations/UsersRepository';
+import { TransformerProvider } from '@shared/providers/ClassTransformerProvider/TransformerProvider';
 
 import { RegisterConfirmationController } from './RegisterConfirmationController';
 import { RegisterConfirmationUseCase } from './RegisterConfirmationUseCase';
@@ -10,7 +11,12 @@ const makeRegisterConfirmationController = (): RegisterConfirmationController =>
     usersRepository,
   );
 
-  return new RegisterConfirmationController(registerConfirmationUseCase);
+  const transformerProvider = new TransformerProvider();
+
+  return new RegisterConfirmationController(
+    registerConfirmationUseCase,
+    transformerProvider,
+  );
 };
 
 export { makeRegisterConfirmationController };

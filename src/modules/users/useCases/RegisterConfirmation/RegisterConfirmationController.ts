@@ -1,3 +1,4 @@
+import { ITransformerProvider } from '@shared/providers/ClassTransformerProvider/model/ITransformerProvider';
 import {
   IRequest,
   IResponse,
@@ -9,6 +10,8 @@ import { IRegisterConfirmationUseCase } from './model/IRegisterConfirmationUseCa
 export class RegisterConfirmationController implements IExpressRequestProvider {
   constructor(
     private registerConfirmationUseCase: IRegisterConfirmationUseCase,
+
+    private transformerProvider: ITransformerProvider,
   ) {}
 
   async handle(request: IRequest, response: IResponse): Promise<IResponse> {
@@ -18,6 +21,8 @@ export class RegisterConfirmationController implements IExpressRequestProvider {
       String(token),
     );
 
-    return response.status(200).json(confirmation);
+    return response
+      .status(200)
+      .json(this.transformerProvider.internalTransform(confirmation));
   }
 }

@@ -13,6 +13,7 @@ export class UsersRepository implements IUsersRepository {
   }
 
   async create({
+    id,
     name,
     email,
     password,
@@ -28,6 +29,7 @@ export class UsersRepository implements IUsersRepository {
     confirmation,
   }: ICreateUserDTO): Promise<User> {
     const user = this.repository.create({
+      id,
       name,
       email,
       password,

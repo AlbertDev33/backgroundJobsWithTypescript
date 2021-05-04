@@ -56,7 +56,7 @@ export class CreateUserUseCase implements ICreateUserUseCase {
     const findUser = await this.usersRepository.findByEmail(email);
 
     if (findUser) {
-      throw new AppError('Invalid email');
+      throw new AppError('E-mail already in use');
     }
 
     const isValidCpf = this.cpfValidatorProvider.isValid(cpf);

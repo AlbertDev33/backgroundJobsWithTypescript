@@ -1,6 +1,7 @@
-import path from 'path';
-
+import { IFilePathProvider } from '@shared/providers/FilePathProvider/model/IFilePathProvider';
 import SendMailDevProvider from '@shared/providers/SendMailProvider/EtherealMailProvider';
+import { ISendMailProvider } from '@shared/providers/SendMailProvider/protocol/ISendMailProvider';
+import { SESMailProvider } from '@shared/providers/SendMailProvider/SESMailProvider';
 
 import { ISendMailUseCase } from './model/ISendMailUseCase';
 
@@ -11,16 +12,27 @@ export interface ISendMailSource {
 }
 
 export class SendMailUseCase implements ISendMailUseCase {
-  public key = 'RegistrationMail';
+  constructor(
+    private sendMailProvider: ISendMailProvider,
+
+    private filePathProvider: IFilePathProvider,
+  ) {}
+
+  get key(): string {
+    return 'RegistrationMail';
+  }
 
   async execute(data: ISendMailSource): Promise<void> {
     const { name, token, email } = data;
 
-    const templatePath = path.resolve(
+    const templatePath = this.filePathProvider.resolve(
       __dirname,
       '..',
       '..',
       '..',
+      '..',
+      'shared',
+      'providers',
       'SendMailProvider',
       'MailTemplate',
       'confirmUserMail.hbs',
@@ -28,10 +40,10 @@ export class SendMailUseCase implements ISendMailUseCase {
 
     const variables = {
       name,
-      link: `http://localhost:3333/confirmation/confirm?token=${token}`,
+      link: `http://localhost:3333/user/confirmation?token=${token}`,
     };
 
-    await SendMailDevProvider.sendMail({
+    await this.sendMailProvider.sendMail({
       to: {
         name,
         address: email,

@@ -51,7 +51,7 @@ export class UserSessionUseCase implements IUserSessionUseCase {
       );
     }
 
-    const token = this.generateToken(existsUser.id);
+    const token = this.generateToken(existsUser.id as string);
 
     return {
       token,

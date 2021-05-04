@@ -210,7 +210,9 @@ describe('Create Users', () => {
 
     const invalidUser = sut.execute(fakeUser);
 
-    await expect(invalidUser).rejects.toEqual(new AppError('Invalid email'));
+    await expect(invalidUser).rejects.toEqual(
+      new AppError('E-mail already in use'),
+    );
   });
 
   it('Should not be able to create a user with invalid cpf', async () => {

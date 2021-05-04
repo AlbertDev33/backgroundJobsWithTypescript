@@ -1,49 +1,67 @@
 import Queue from 'bull';
 
 import redisConfig from '@config/cache';
+import { makeSendMailUseCase } from '@modules/users/useCases/SendMail';
 import {
   ISendMailSource,
   SendMailUseCase,
-} from '@shared/providers/QueueProvider/SendMailService/implementations/SendMailUseCase';
+} from '@modules/users/useCases/SendMail/SendMailUseCase';
+import { AppError } from '@shared/errors/AppError';
 
 import { IQueueProvider } from './protocol/IQueueProvider';
 
-const sendMail = new SendMailUseCase();
+interface IQueueObject {
+  [key: string]: {
+    bull: Queue.Queue<any>;
+    name: string;
+    handle: (data: ISendMailSource) => void;
+  };
+}
+
+const sendMailUseCase = makeSendMailUseCase();
+
+const jobs = [sendMailUseCase];
 
 export class QueueProvider implements IQueueProvider {
-  constructor(
-    private queues = [
-      {
-        bull: new Queue(sendMail.key, {
-          redis: redisConfig,
-        }),
-        name: sendMail.key,
-        handle: sendMail.execute,
-      },
-    ],
-  ) {}
+  private queues: IQueueObject = {};
+
+  constructor() {
+    this.init();
+  }
+
+  init(): void {
+    jobs.forEach(({ key, execute }: SendMailUseCase) => {
+      this.queues[key] = {
+        bull: new Queue(key, { redis: redisConfig }),
+        name: key,
+        handle: execute,
+      };
+    });
+  }
 
   async addQueue(
     queueName: string,
     data: ISendMailSource,
   ): Promise<Queue.Job | undefined> {
-    const queue = this.queues.find(queue => queue.name === queueName);
+    const queue = jobs.find(queue => queue.key === queueName);
 
-    const { name, token, email } = data;
+    if (!queue) {
+      throw new AppError('Queue undefined');
+    }
 
-    const responseParameters = this.queues.map(queue =>
-      queue.handle({ name, token, email }),
-    );
+    const responseParameters = jobs.map(queue => queue.execute(data));
 
-    return queue?.bull.add(responseParameters);
+    return this.queues[queue.key].bull.add(responseParameters);
   }
 
   async processQueue(): Promise<void> {
-    this.queues.forEach(async queue => {
-      await queue.bull.process(() => queue.handle);
+    jobs.forEach(async queue => {
+      const { bull, handle } = this.queues[queue.key];
 
-      queue.bull.on('failed', (job, err) => {
-        console.log('Job failed', queue.name, job.data);
+      await bull.process(() => handle);
+
+      bull.on('failed', (job, err) => {
+        console.log('Job failed', job.name, job.data);
         console.log(err);
       });
     });

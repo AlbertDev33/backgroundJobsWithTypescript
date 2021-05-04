@@ -12,7 +12,7 @@ class EtherealMailProvider implements ISendMailProvider {
       .createTestAccount()
       .then(account => {
         const transporter = nodemailer.createTransport({
-          host: account.smtp.host,
+          host: 'smtp.ethereal.email',
           port: account.smtp.port,
           secure: account.smtp.secure,
           auth: {

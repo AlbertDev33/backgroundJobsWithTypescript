@@ -1,4 +1,5 @@
 import { UsersRepository } from '@modules/users/infra/typeorm/repositories/implementations/UsersRepository';
+import { TransformerProvider } from '@shared/providers/ClassTransformerProvider/TransformerProvider';
 import { CpfValidatorProvider } from '@shared/providers/CpfValidatorProvider/CpfValidatorProvider';
 import { PasswordHashProvider } from '@shared/providers/HashProvider/PasswordHashProvider';
 import { QueueProvider } from '@shared/providers/QueueProvider/QueueProvider';
@@ -26,7 +27,9 @@ const makeCreateUserController = (): CreateUserController => {
     queueProvider,
   );
 
-  return new CreateUserController(createUserUseCase);
+  const transformerProvider = new TransformerProvider();
+
+  return new CreateUserController(createUserUseCase, transformerProvider);
 };
 
 export { makeCreateUserController };

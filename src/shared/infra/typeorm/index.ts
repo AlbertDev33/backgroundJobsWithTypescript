@@ -1,6 +1,8 @@
 import { Connection, createConnection, getConnectionOptions } from 'typeorm';
 
-export default async (): Promise<Connection> => {
+const closeConnectioni = new Connection({ type: 'postgres' });
+
+export const openConnection = async (): Promise<Connection> => {
   const defaultOptions = await getConnectionOptions();
 
   return createConnection(
@@ -12,3 +14,5 @@ export default async (): Promise<Connection> => {
     }),
   );
 };
+
+export const disconnect = (): Promise<void> => closeConnectioni.close();

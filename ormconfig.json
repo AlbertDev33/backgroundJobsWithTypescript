@@ -5,9 +5,9 @@
     "username": "postgres",
     "password": "postgres",
     "database": "backjobs",
-    "migrations": ["./src/shared/ínfra/typeorm/migrations/*.ts"],
+    "migrations": ["./src/shared/infra/typeorm/migrations/*.ts"],
     "entities": ["./src/modules/**/schema/*.ts"],
     "cli": {
-        "migrationsDir": "./src/shared/ínfra/typeorm/migrations"
+        "migrationsDir": "./src/shared/infra/typeorm/migrations"
     }
 }

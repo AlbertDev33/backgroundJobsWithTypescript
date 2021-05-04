@@ -1,3 +1,4 @@
+import { ITransformerProvider } from '@shared/providers/ClassTransformerProvider/model/ITransformerProvider';
 import {
   IRequest,
   IResponse,
@@ -7,7 +8,11 @@ import { IExpressRequestProvider } from '@shared/providers/ExpressRequestProvide
 import { ICreateUserUseCase } from './model/ICreateUserUseCase';
 
 export class CreateUserController implements IExpressRequestProvider {
-  constructor(private createUserUseCase: ICreateUserUseCase) {}
+  constructor(
+    private createUserUseCase: ICreateUserUseCase,
+
+    private transformerProvider: ITransformerProvider,
+  ) {}
 
   async handle(request: IRequest, response: IResponse): Promise<IResponse> {
     const { name, email, password, cpf, cep, homeNumber } = request.body;
@@ -21,6 +26,8 @@ export class CreateUserController implements IExpressRequestProvider {
       homeNumber,
     });
 
-    return response.status(201).json(user);
+    return response
+      .status(201)
+      .json(this.transformerProvider.internalTransform(user));
   }
 }
