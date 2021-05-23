@@ -10,6 +10,10 @@ import { AppError } from '@shared/errors/AppError';
 
 import { IQueueProvider } from './protocol/IQueueProvider';
 
+const sendMailUseCase = makeSendMailUseCase();
+
+const jobs = [sendMailUseCase];
+
 interface IQueueObject {
   [key: string]: {
     bull: Queue.Queue<any>;
@@ -17,10 +21,6 @@ interface IQueueObject {
     handle: (data: ISendMailSource) => void;
   };
 }
-
-const sendMailUseCase = makeSendMailUseCase();
-
-const jobs = [sendMailUseCase];
 
 export class QueueProvider implements IQueueProvider {
   private queues: IQueueObject = {};
